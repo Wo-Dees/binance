@@ -51,29 +51,29 @@ public:
 
     std::string ping();
     std::string time();
-    std::string exchangeInfo(std::string symbol);
+    std::string exchangeInfo(const std::string& symbol);
 
-    std::string depth(std::string symbol, std::size_t limit);
-    std::string trades(std::string symbol, std::size_t limit);
-    std::string klines(std::string symbol, std::string interval);
-    std::string historicalTrades(std::string symbol);
-    std::string price(std::string symbol);
-    std::string bookTicker(std::string symbol);
+    std::string depth(const std::string& symbol, std::size_t limit);
+    std::string trades(const std::string& symbol, std::size_t limit);
+    std::string klines(const std::string& symbol, const std::string& interval);
+    std::string historicalTrades(const std::string& symbol);
+    std::string price(const std::string& symbol);
+    std::string bookTicker(const std::string& symbol);
 
     std::string account();
-    std::string openOrders(std::string symbol);
-    std::string allOrders(std::string symbol);
+    std::string openOrders(const std::string& symbol);
+    std::string allOrders(const std::string& symbol);
 
-    std::string create_new_order_market_test(std::string symbol, SideType side, double quantity);
-    std::string create_new_market_order(std::string symbol, SideType side, double quantity); 
+    std::string create_new_order_market_test(const std::string& symbol, SideType side, double quantity);
+    std::string create_new_market_order(const std::string& symbol, SideType side, double quantity); 
 
-    OrderHandle create_new_limit_order(std::string symbol, SideType side, std::string timeInForce, double price, double quantity);
-    std::string info_about_order(std::string symbol, OrderHandle handle); 
-    std::string cancel_order(std::string symbol, OrderHandle handle);
+    OrderHandle create_new_limit_order(const std::string& symbol, SideType side, const std::string& timeInForce, double price, double quantity);
+    std::string info_about_order(const std::string& symbol, OrderHandle handle); 
+    std::string cancel_order(const std::string& symbol, OrderHandle handle);
 
 private:
 
-    std::string Response(http::verb type, std::string sreq);
+    std::string Response(http::verb type, const std::string& sreq);
 
     void InitSession();
 

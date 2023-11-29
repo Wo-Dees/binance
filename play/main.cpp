@@ -1,6 +1,3 @@
-#include "binana/order.hpp"
-#include <string>
-
 #include <binana/client.hpp>
 
 #include <iostream>

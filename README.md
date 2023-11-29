@@ -15,3 +15,4 @@ export binance_testnet_secret_key='{your_secret_key}'
 ```
 3. Установить зависимости: boost, openssl.
 4. Дальше cmake должен собрать всё сам.
+5. Эксперименты можно проводить в play.

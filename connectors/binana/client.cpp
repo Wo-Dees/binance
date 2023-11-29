@@ -19,7 +19,7 @@
 
 namespace binana {
 
-std::string getField(std::string json, std::string field) {
+std::string getField(const std::string& json, const std::string& field) {
     std::stringstream jsonencode(json);
     boost::property_tree::ptree root;
     boost::property_tree::read_json(jsonencode, root);
@@ -58,7 +58,7 @@ void SpotClient::InitSession() {
     stream_.handshake(ssl::stream_base::client);
 }
 
-std::string SpotClient::Response(http::verb type, std::string sreq) {
+std::string SpotClient::Response(http::verb type, const std::string& sreq) {
     http::request<http::empty_body> req{type, sreq, 11};
     req.set(http::field::host, base_url_);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
@@ -78,40 +78,40 @@ std::string SpotClient::time() {
     return Response(http::verb::get, "/api/v3/time");
 }
 
-std::string SpotClient::exchangeInfo(std::string symbol) {
+std::string SpotClient::exchangeInfo(const std::string& symbol) {
     return Response(http::verb::get, 
     "/api/v3/exchangeInfo?symbol=" + symbol);
 }
 
-std::string SpotClient::depth(std::string symbol, std::size_t limit) {
+std::string SpotClient::depth(const std::string& symbol, std::size_t limit) {
     return Response(http::verb::get, 
     "/api/v3/depth?symbol=" + symbol
         + "&limit=" + std::to_string(limit));
 }
 
-std::string SpotClient::trades(std::string symbol, std::size_t limit) {
+std::string SpotClient::trades(const std::string& symbol, std::size_t limit) {
     return Response(http::verb::get, 
     "/api/v3/trades?symbol=" + symbol
         + "&limit=" + std::to_string(limit));
 }
 
-std::string SpotClient::klines(std::string symbol, std::string interval) {
+std::string SpotClient::klines(const std::string& symbol, const std::string& interval) {
     return Response(http::verb::get, 
     "/api/v3/klines?symbol=" + symbol
         + "&interval=" + interval);
 }
 
-std::string SpotClient::historicalTrades(std::string symbol) {
+std::string SpotClient::historicalTrades(const std::string& symbol) {
     return Response(http::verb::get, 
     "/api/v3/historicalTrades?symbol=" + symbol);
 }
 
-std::string SpotClient::price(std::string symbol) {
+std::string SpotClient::price(const std::string& symbol) {
     return Response(http::verb::get, 
     "/api/v3/ticker/price?symbol=" + symbol);
 }
 
-std::string SpotClient::bookTicker(std::string symbol) {
+std::string SpotClient::bookTicker(const std::string& symbol) {
     return Response(http::verb::get, 
     "/api/v3/ticker/bookTicker?symbol=" + symbol);
 }
@@ -123,21 +123,21 @@ std::string SpotClient::account() {
     return Response(http::verb::get, "/api/v3/account?" + query + signature);
 }
 
-std::string SpotClient::openOrders(std::string symbol) {
+std::string SpotClient::openOrders(const std::string& symbol) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = "timestamp=" + time + "&recvWindow=50000" + "&symbol=" + symbol;
     std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
     return Response(http::verb::get, "/api/v3/openOrders?" + query + signature);
 }
 
-std::string SpotClient::allOrders(std::string symbol) {
+std::string SpotClient::allOrders(const std::string& symbol) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = "timestamp=" + time + "&recvWindow=50000" + "&symbol=" + symbol;
     std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
     return Response(http::verb::get, "/api/v3/allOrders?" + query + signature);
 }
 
-std::string SpotClient::create_new_order_market_test(std::string symbol, SideType side, double quantity) {
+std::string SpotClient::create_new_order_market_test(const std::string& symbol, SideType side, double quantity) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = 
         "timestamp=" + time + 
@@ -150,7 +150,7 @@ std::string SpotClient::create_new_order_market_test(std::string symbol, SideTyp
     return Response(http::verb::get, "/api/v3/order/test?" + query + signature);
 }
 
-std::string SpotClient::create_new_market_order(std::string symbol, SideType side, double quantity) {
+std::string SpotClient::create_new_market_order(const std::string& symbol, SideType side, double quantity) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = 
         "timestamp=" + time + 
@@ -172,7 +172,7 @@ std::string SpotClient::GenSide(SideType side) {
     }
 }
 
-OrderHandle SpotClient::create_new_limit_order(std::string symbol, SideType side, std::string timeInForce, double price, double quantity) {
+OrderHandle SpotClient::create_new_limit_order(const std::string& symbol, SideType side, const std::string& timeInForce, double price, double quantity) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = 
         "timestamp=" + time + 
@@ -188,7 +188,7 @@ OrderHandle SpotClient::create_new_limit_order(std::string symbol, SideType side
     return OrderHandle(std::stoi(getField(ans, "orderId")));
 }
 
-std::string SpotClient::info_about_order(std::string symbol, OrderHandle handle) {
+std::string SpotClient::info_about_order(const std::string& symbol, OrderHandle handle) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = 
         "timestamp=" + time + 
@@ -199,7 +199,7 @@ std::string SpotClient::info_about_order(std::string symbol, OrderHandle handle)
     return Response(http::verb::get, "/api/v3/order?" + query + signature);
 }
 
-std::string SpotClient::cancel_order(std::string symbol, OrderHandle handle) {
+std::string SpotClient::cancel_order(const std::string& symbol, OrderHandle handle) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = 
         "timestamp=" + time + 
