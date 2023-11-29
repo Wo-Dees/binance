@@ -1,4 +1,4 @@
-#include "client.hpp"
+#include <client.hpp>
 #include <boost/asio/buffered_read_stream.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/core/flat_buffer.hpp>
@@ -13,28 +13,15 @@
 #include <openssl/x509v3.h>
 #include <string>
 
-std::string SpotClient::ping() {
-    // Description:
-    //   Ping binance server
-    // 
-    // Arguments:
-    //   None
-    //
-    // Return value:
-    //   None
-    return Response(http::verb::get, "/api/v3/ping");
-}
-
-std::string SpotClient::time() {
-    // Description:
-    //   Get binance server time
-    // 
-    // Arguments:
-    //   None
-    //
-    // Return value:
-    //   None
-    return Response(http::verb::get, "/api/v3/time");
+std::string string_to_hex(const std::string& input) {
+    static const char hex_digits[] = "0123456789ABCDEF";
+    std::string output;
+    output.reserve(input.length() * 2);
+    for (unsigned char c : input) {
+        output.push_back(hex_digits[c >> 4]);
+        output.push_back(hex_digits[c & 15]);
+    }
+    return output;
 }
 
 SpotClient::SpotClient(std::string base_url) : 
@@ -65,28 +52,58 @@ void SpotClient::InitSession() {
     stream_.handshake(ssl::stream_base::client);
 }
 
-// std::string SpotClient::exchangeInfo(std::string symbol) {
-//     http::request<http::empty_body> req{http::verb::get, "/api/v3/exchangeInfo?symbol=" + symbol, 11};
-//     req.set(http::field::host, base_url_);
-//     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+std::string SpotClient::Response(http::verb type, std::string sreq) {
+    http::request<http::empty_body> req{type, sreq, 11};
+    req.set(http::field::host, base_url_);
+    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+    http::write(stream_, req);
+    beast::flat_buffer buffer;
+    http::response<http::dynamic_body> res;
+    http::read(stream_, buffer, res);
+    return beast::buffers_to_string(res.body().data());
+}
 
-//     http::write(stream_, req);
+std::string SpotClient::ping() {
+    return Response(http::verb::get, "/api/v3/ping");
+}
 
-//     beast::flat_buffer buffer;
-//     http::response<http::dynamic_body> res;
-//     http::read(stream_, buffer, res);        
-//     return beast::buffers_to_string(res.body().data());
-// }
+std::string SpotClient::time() {
+    return Response(http::verb::get, "/api/v3/time");
+}
 
-std::string string_to_hex(const std::string& input) {
-    static const char hex_digits[] = "0123456789ABCDEF";
-    std::string output;
-    output.reserve(input.length() * 2);
-    for (unsigned char c : input) {
-        output.push_back(hex_digits[c >> 4]);
-        output.push_back(hex_digits[c & 15]);
-    }
-    return output;
+std::string SpotClient::exchangeInfo(std::string symbol) {
+    return Response(http::verb::get, 
+    "/api/v3/exchangeInfo?symbol=" + symbol);
+}
+
+std::string SpotClient::depth(std::string symbol, std::size_t limit) {
+    return Response(http::verb::get, 
+    "/api/v3/depth?symbol=" + symbol
+        + "&limit=" + std::to_string(limit));
+}
+
+std::string SpotClient::trades(std::string symbol, std::size_t limit) {
+    return Response(http::verb::get, 
+    "/api/v3/trades?symbol=" + symbol
+        + "&limit=" + std::to_string(limit));
+}
+
+std::string SpotClient::klines(std::string symbol, std::string interval) {
+    return Response(http::verb::get, 
+    "/api/v3/klines?symbol=" + symbol
+        + "&interval=" + interval);
+}
+
+std::string SpotClient::historicalTrades(std::string symbol) {
+    return Response(http::verb::get, "/api/v3/historicalTrades?symbol=" + symbol);
+}
+
+std::string SpotClient::price(std::string symbol) {
+    return Response(http::verb::get, "/api/v3/ticker/price?symbol=" + symbol);
+}
+
+std::string SpotClient::bookTicker(std::string symbol) {
+    return Response(http::verb::get, "/api/v3/ticker/bookTicker?symbol=" + symbol);
 }
 
 std::string SpotClient::account() {
@@ -110,20 +127,6 @@ std::string SpotClient::account() {
     beast::flat_buffer buffer;
     http::response<http::dynamic_body> res;
     http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
-}
-
-std::string SpotClient::klines(std::string symbol, std::string interval) {
-    std::string query = "?symbol=" + symbol + "&interval=" + interval;
-    http::request<http::empty_body> req{http::verb::get, "/api/v3/klines" + query,  11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);
     return beast::buffers_to_string(res.body().data());
 }
 
@@ -151,32 +154,6 @@ std::string SpotClient::openOrders(std::string symbol) {
     return beast::buffers_to_string(res.body().data());
 }
 
-std::string SpotClient::trades(std::string symbol) {
-    http::request<http::empty_body> req{http::verb::get, "/api/v3/trades?symbol=" + symbol, 11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
-}
-
-std::string SpotClient::historicalTrades(std::string symbol) {
-    http::request<http::empty_body> req{http::verb::get, "/api/v3/historicalTrades?symbol=" + symbol, 11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
-}
-
 std::string SpotClient::allOrders(std::string symbol) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = "timestamp=" + time + "&recvWindow=50000" + "&symbol=" + symbol;
@@ -192,32 +169,6 @@ std::string SpotClient::allOrders(std::string symbol) {
     req.set(http::field::host, base_url_);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
     req.insert("X-MBX-APIKEY", api_key_);
-
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
-}
-
-std::string SpotClient::price(std::string symbol) {
-    http::request<http::empty_body> req{http::verb::get, "/api/v3/ticker/price?symbol=" + symbol, 11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
-}
-
-std::string SpotClient::bookTicker(std::string symbol) {
-    http::request<http::empty_body> req{http::verb::get, "/api/v3/ticker/bookTicker?symbol=" + symbol, 11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
     http::write(stream_, req);
 

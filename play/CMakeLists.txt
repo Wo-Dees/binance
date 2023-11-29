@@ -1,5 +1,5 @@
-add_executable(play main.cpp)
+add_executable(play)
 
-include_directories("../connectors")
+target_sources(play PRIVATE main.cpp)
 
-target_link_libraries(play banana)
+target_link_libraries(play binana)
