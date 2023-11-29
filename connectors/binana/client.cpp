@@ -14,6 +14,8 @@
 #include <openssl/x509v3.h>
 #include <string>
 
+namespace binana {
+
 std::string string_to_hex(const std::string& input) {
     static const char hex_digits[] = "0123456789ABCDEF";
     std::string output;
@@ -121,49 +123,15 @@ std::string SpotClient::account() {
 std::string SpotClient::openOrders(std::string symbol) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = "timestamp=" + time + "&recvWindow=50000" + "&symbol=" + symbol;
-    std::string hash(' ', EVP_MAX_MD_SIZE);
-    unsigned int len = 0;
-    unsigned char* result = HMAC(EVP_sha256(), secret_key_.data(), secret_key_.size(),
-                        reinterpret_cast<unsigned char*>(query.data()), query.size(), 
-                        reinterpret_cast<unsigned char*>(hash.data()), &len);
-
-    std::string signature = "&signature=" + string_to_hex(hash);
-
-    http::request<http::empty_body> req{http::verb::get, "/api/v3/openOrders?" + query + signature, 11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    req.insert("X-MBX-APIKEY", api_key_);
-
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
+    std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
+    return Response(http::verb::get, "/api/v3/openOrders?" + query + signature);
 }
 
 std::string SpotClient::allOrders(std::string symbol) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = "timestamp=" + time + "&recvWindow=50000" + "&symbol=" + symbol;
-    std::string hash(' ', EVP_MAX_MD_SIZE);
-    unsigned int len = 0;
-    unsigned char* result = HMAC(EVP_sha256(), secret_key_.data(), secret_key_.size(),
-                        reinterpret_cast<unsigned char*>(query.data()), query.size(), 
-                        reinterpret_cast<unsigned char*>(hash.data()), &len);
-
-    std::string signature = "&signature=" + string_to_hex(hash);
-
-    http::request<http::empty_body> req{http::verb::get, "/api/v3/allOrders?" + query + signature, 11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    req.insert("X-MBX-APIKEY", api_key_);
-
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
+    std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
+    return Response(http::verb::get, "/api/v3/allOrders?" + query + signature);
 }
 
 std::string SpotClient::create_new_order_test(std::string symbol, SideType side, TypeOrder type, double quantity) {
@@ -252,4 +220,6 @@ std::string SpotClient::GenType(TypeOrder type) {
         case TypeOrder::STOP_LOSS:
             return "STOP_LOSS";
     }
+}
+
 }

@@ -28,6 +28,8 @@ namespace net = boost::asio;
 namespace ssl = boost::asio::ssl;
 namespace http = boost::beast::http;
 
+namespace binana {
+
 enum class SideType {
     Buy,
     Sell,
@@ -82,3 +84,5 @@ private:
     std::string api_key_;
     std::string secret_key_;
 };
+
+}

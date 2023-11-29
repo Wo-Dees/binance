@@ -9,7 +9,7 @@ static const std::string api_key = std::getenv("binance_testnet_api_key");
 static const std::string secret_key = std::getenv("binance_testnet_secret_key");
 
 int main() {
-    SpotClient client(base_url, api_key, secret_key);
-    std::cout << client.klines("BTCUSDT", "1h") << std::endl;
+    binana::SpotClient client(base_url, api_key, secret_key);
+    std::cout << client.allOrders("BTCUSDT") << std::endl;
     return 0;
 }
