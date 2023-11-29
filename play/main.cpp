@@ -10,6 +10,8 @@ static const std::string secret_key = std::getenv("binance_testnet_secret_key");
 
 int main() {
     binana::SpotClient client(base_url, api_key, secret_key);
-    std::cout << client.allOrders("BTCUSDT") << std::endl;
+    std::cout << client.create_new_order("BTCUSDT", binana::SideType::Sell, binana::TypeOrder::MARKET, 0.001) << std::endl;
+    std::cout << "======================================" << std::endl;
+    std::cout << client.account() << std::endl;
     return 0;
 }

@@ -137,61 +137,27 @@ std::string SpotClient::allOrders(std::string symbol) {
 std::string SpotClient::create_new_order_test(std::string symbol, SideType side, TypeOrder type, double quantity) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = 
-    "timestamp=" + time + 
-    "&recvWindow=50000" + 
-    "&symbol=" + symbol + 
-    "&side=" + GenSide(side) +
-    "&type="+ GenType(type) +
-    "&quantity=" + std::to_string(quantity);
-    std::string hash(' ', EVP_MAX_MD_SIZE);
-    unsigned int len = 0;
-    unsigned char* result = HMAC(EVP_sha256(), secret_key_.data(), secret_key_.size(),
-                        reinterpret_cast<unsigned char*>(query.data()), query.size(), 
-                        reinterpret_cast<unsigned char*>(hash.data()), &len);
-
-    std::string signature = "&signature=" + string_to_hex(hash);
-
-    http::request<http::empty_body> req{http::verb::post, "/api/v3/order/test?" + query + signature, 11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    req.insert("X-MBX-APIKEY", api_key_);
-
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
+        "timestamp=" + time + 
+        "&recvWindow=50000" + 
+        "&symbol=" + symbol + 
+        "&side=" + GenSide(side) +
+        "&type="+ GenType(type) +
+        "&quantity=" + std::to_string(quantity);
+    std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
+    return Response(http::verb::get, "/api/v3/order/test?" + query + signature);
 }
 
 std::string SpotClient::create_new_order(std::string symbol, SideType side, TypeOrder type, double quantity) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = 
-    "timestamp=" + time + 
-    "&recvWindow=50000" + 
-    "&symbol=" + symbol + 
-    "&side=" + GenSide(side) +
-    "&type="+ GenType(type) +
-    "&quantity=" + std::to_string(quantity);
-    std::string hash(' ', EVP_MAX_MD_SIZE);
-    unsigned int len = 0;
-    unsigned char* result = HMAC(EVP_sha256(), secret_key_.data(), secret_key_.size(),
-                        reinterpret_cast<unsigned char*>(query.data()), query.size(), 
-                        reinterpret_cast<unsigned char*>(hash.data()), &len);
-
-    std::string signature = "&signature=" + string_to_hex(hash);
-
-    http::request<http::empty_body> req{http::verb::post, "/api/v3/order?" + query + signature, 11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    req.insert("X-MBX-APIKEY", api_key_);
-
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
+        "timestamp=" + time + 
+        "&recvWindow=50000" + 
+        "&symbol=" + symbol + 
+        "&side=" + GenSide(side) +
+        "&type="+ GenType(type) +
+        "&quantity=" + std::to_string(quantity);
+    std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
+    return Response(http::verb::post, "/api/v3/order?" + query + signature);
 } 
 
 std::string SpotClient::info_about_order(std::string symbol, std::size_t order_id) {
