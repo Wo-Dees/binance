@@ -1,29 +1,11 @@
 #pragma once
 
-#include <algorithm>
-#include <boost/asio/connect.hpp>
-#include <boost/asio/ssl/context.hpp>
-#include <boost/beast.hpp>
-
-#include <boost/beast/core/buffers_to_string.hpp>
-#include <boost/beast/core/flat_buffer.hpp>
-#include <boost/beast/core/tcp_stream.hpp>
-#include <boost/beast/http/buffer_body.hpp>
-#include <boost/beast/http/dynamic_body.hpp>
-#include <boost/beast/http/field.hpp>
-#include <boost/beast/http/message.hpp>
-#include <boost/beast/http/string_body.hpp>
-#include <boost/beast/http/verb.hpp>
-#include <boost/beast/http/write.hpp>
-#include <boost/beast/ssl/ssl_stream.hpp>
-#include <boost/beast/version.hpp>
-#include <string>
-#include <boost/asio/ssl.hpp>
 #include <boost/asio.hpp>
-#include <openssl/ssl.h>
-#include <openssl/hmac.h>
+#include <boost/beast.hpp>
 #include <boost/beast/ssl.hpp>
 #include <binana/order.hpp>
+
+#include <string>
 
 namespace beast = boost::beast;
 namespace net = boost::asio;

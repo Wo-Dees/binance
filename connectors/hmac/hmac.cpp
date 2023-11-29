@@ -1,6 +1,6 @@
 #include <cassert>
-#include <hmac/hmac.hpp>
 
+#include <hmac/hmac.hpp>
 #include <openssl/hmac.h>
 
 namespace hmac {

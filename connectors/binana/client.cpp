@@ -1,20 +1,7 @@
-#include "order.hpp"
+#include <order.hpp>
 #include <client.hpp>
 #include <hmac/hmac.hpp>
-#include <boost/asio/buffered_read_stream.hpp>
-#include <boost/beast/core/buffers_to_string.hpp>
-#include <boost/beast/core/flat_buffer.hpp>
-#include <boost/beast/http/dynamic_body.hpp>
-#include <boost/beast/http/empty_body.hpp>
-#include <boost/beast/http/field.hpp>
-#include <boost/beast/http/message.hpp>
-#include <boost/beast/http/read.hpp>
-#include <boost/beast/http/verb.hpp>
-#include <boost/beast/http/write.hpp>
-#include <boost/beast/version.hpp>
-#include <openssl/x509v3.h>
-#include <string>
-#include <boost/property_tree/ptree.hpp>
+
 #include <boost/property_tree/json_parser.hpp>
 
 namespace binana {
