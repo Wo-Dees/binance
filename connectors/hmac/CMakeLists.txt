@@ -1,6 +1,7 @@
 find_package(OpenSSL REQUIRED)
 
-add_library(hmac_banana STATIC)
+add_library(hmac)
 
-target_sources(hmac_banana PRIVATE hmac.cpp)
-target_link_libraries(hmac_banana PRIVATE OpenSSL::SSL)
+target_sources(hmac PRIVATE hmac.cpp)
+target_include_directories(hmac PUBLIC ../)
+target_link_libraries(hmac PRIVATE OpenSSL::SSL)

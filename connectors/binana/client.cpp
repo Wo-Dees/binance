@@ -1,4 +1,5 @@
 #include <client.hpp>
+#include <hmac/hmac.hpp>
 #include <boost/asio/buffered_read_stream.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/core/flat_buffer.hpp>
@@ -56,6 +57,7 @@ std::string SpotClient::Response(http::verb type, std::string sreq) {
     http::request<http::empty_body> req{type, sreq, 11};
     req.set(http::field::host, base_url_);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+    req.insert("X-MBX-APIKEY", api_key_);
     http::write(stream_, req);
     beast::flat_buffer buffer;
     http::response<http::dynamic_body> res;
@@ -95,39 +97,25 @@ std::string SpotClient::klines(std::string symbol, std::string interval) {
 }
 
 std::string SpotClient::historicalTrades(std::string symbol) {
-    return Response(http::verb::get, "/api/v3/historicalTrades?symbol=" + symbol);
+    return Response(http::verb::get, 
+    "/api/v3/historicalTrades?symbol=" + symbol);
 }
 
 std::string SpotClient::price(std::string symbol) {
-    return Response(http::verb::get, "/api/v3/ticker/price?symbol=" + symbol);
+    return Response(http::verb::get, 
+    "/api/v3/ticker/price?symbol=" + symbol);
 }
 
 std::string SpotClient::bookTicker(std::string symbol) {
-    return Response(http::verb::get, "/api/v3/ticker/bookTicker?symbol=" + symbol);
+    return Response(http::verb::get, 
+    "/api/v3/ticker/bookTicker?symbol=" + symbol);
 }
 
 std::string SpotClient::account() {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = "timestamp=" + time + "&recvWindow=50000";
-    std::string hash(' ', EVP_MAX_MD_SIZE);
-    unsigned int len = 0;
-    unsigned char* result = HMAC(EVP_sha256(), secret_key_.data(), secret_key_.size(),
-                        reinterpret_cast<unsigned char*>(query.data()), query.size(), 
-                        reinterpret_cast<unsigned char*>(hash.data()), &len);
-
-    std::string signature = "&signature=" + string_to_hex(hash);
-
-    http::request<http::empty_body> req{http::verb::get, "/api/v3/account?" + query + signature, 11};
-    req.set(http::field::host, base_url_);
-    req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    req.insert("X-MBX-APIKEY", api_key_);
-
-    http::write(stream_, req);
-
-    beast::flat_buffer buffer;
-    http::response<http::dynamic_body> res;
-    http::read(stream_, buffer, res);        
-    return beast::buffers_to_string(res.body().data());
+    std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
+    return Response(http::verb::get, "/api/v3/account?" + query + signature);
 }
 
 std::string SpotClient::openOrders(std::string symbol) {
@@ -177,10 +165,6 @@ std::string SpotClient::allOrders(std::string symbol) {
     http::read(stream_, buffer, res);        
     return beast::buffers_to_string(res.body().data());
 }
-
-// POST - create order
-// DELETE - cancel order
-// GET - information about order
 
 std::string SpotClient::create_new_order_test(std::string symbol, SideType side, TypeOrder type, double quantity) {
     std::string time = std::to_string(std::time(nullptr) * 1000);

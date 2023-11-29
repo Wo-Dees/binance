@@ -9,4 +9,4 @@ add_library(binana)
 
 target_sources(binana PRIVATE client.cpp order.cpp)
 target_include_directories(binana PUBLIC ../)
-target_link_libraries(binana PRIVATE Threads::Threads OpenSSL::SSL ${Boost_LIBRARIES})
+target_link_libraries(binana PRIVATE Threads::Threads OpenSSL::SSL ${Boost_LIBRARIES} hmac)

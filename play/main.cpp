@@ -10,6 +10,6 @@ static const std::string secret_key = std::getenv("binance_testnet_secret_key");
 
 int main() {
     SpotClient client(base_url, api_key, secret_key);
-    std::cout << client.bookTicker("BTCUSDT") << std::endl;
+    std::cout << client.klines("BTCUSDT", "1h") << std::endl;
     return 0;
 }
