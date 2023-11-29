@@ -1,3 +1,4 @@
+#include "order.hpp"
 #include <client.hpp>
 #include <hmac/hmac.hpp>
 #include <boost/asio/buffered_read_stream.hpp>
@@ -13,18 +14,20 @@
 #include <boost/beast/version.hpp>
 #include <openssl/x509v3.h>
 #include <string>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 namespace binana {
 
-std::string string_to_hex(const std::string& input) {
-    static const char hex_digits[] = "0123456789ABCDEF";
-    std::string output;
-    output.reserve(input.length() * 2);
-    for (unsigned char c : input) {
-        output.push_back(hex_digits[c >> 4]);
-        output.push_back(hex_digits[c & 15]);
+std::string getField(std::string json, std::string field) {
+    std::stringstream jsonencode(json);
+    boost::property_tree::ptree root;
+    boost::property_tree::read_json(jsonencode, root);
+
+    if (root.empty()) {
+        return "";
     }
-    return output;
+    return root.get<std::string>(field);
 }
 
 SpotClient::SpotClient(std::string base_url) : 
@@ -134,38 +137,30 @@ std::string SpotClient::allOrders(std::string symbol) {
     return Response(http::verb::get, "/api/v3/allOrders?" + query + signature);
 }
 
-std::string SpotClient::create_new_order_test(std::string symbol, SideType side, TypeOrder type, double quantity) {
+std::string SpotClient::create_new_order_market_test(std::string symbol, SideType side, double quantity) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = 
         "timestamp=" + time + 
         "&recvWindow=50000" + 
         "&symbol=" + symbol + 
         "&side=" + GenSide(side) +
-        "&type="+ GenType(type) +
+        "&type=MARKET" +
         "&quantity=" + std::to_string(quantity);
     std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
     return Response(http::verb::get, "/api/v3/order/test?" + query + signature);
 }
 
-std::string SpotClient::create_new_order(std::string symbol, SideType side, TypeOrder type, double quantity) {
+std::string SpotClient::create_new_market_order(std::string symbol, SideType side, double quantity) {
     std::string time = std::to_string(std::time(nullptr) * 1000);
     std::string query = 
         "timestamp=" + time + 
         "&recvWindow=50000" + 
         "&symbol=" + symbol + 
         "&side=" + GenSide(side) +
-        "&type="+ GenType(type) +
+        "&type=MARKET" +
         "&quantity=" + std::to_string(quantity);
     std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
     return Response(http::verb::post, "/api/v3/order?" + query + signature);
-} 
-
-std::string SpotClient::info_about_order(std::string symbol, std::size_t order_id) {
-    return "";
-}
-
-std::string SpotClient::cancel_order(std::string symbol, std::size_t order_id) {
-    return "";
 }
 
 std::string SpotClient::GenSide(SideType side) {
@@ -177,15 +172,42 @@ std::string SpotClient::GenSide(SideType side) {
     }
 }
 
-std::string SpotClient::GenType(TypeOrder type) {
-    switch (type) {
-        case TypeOrder::MARKET:
-            return "MARKET";
-        case TypeOrder::LIMIT:
-            return "LIMIT";
-        case TypeOrder::STOP_LOSS:
-            return "STOP_LOSS";
-    }
+OrderHandle SpotClient::create_new_limit_order(std::string symbol, SideType side, std::string timeInForce, double price, double quantity) {
+    std::string time = std::to_string(std::time(nullptr) * 1000);
+    std::string query = 
+        "timestamp=" + time + 
+        "&recvWindow=50000" + 
+        "&symbol=" + symbol + 
+        "&side=" + GenSide(side) +
+        "&type=LIMIT" +
+        "&timeInForce=" + timeInForce + 
+        "&price=" + std::to_string(price) + 
+        "&quantity=" + std::to_string(quantity);
+    std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
+    auto ans = Response(http::verb::post, "/api/v3/order?" + query + signature);
+    return OrderHandle(std::stoi(getField(ans, "orderId")));
+}
+
+std::string SpotClient::info_about_order(std::string symbol, OrderHandle handle) {
+    std::string time = std::to_string(std::time(nullptr) * 1000);
+    std::string query = 
+        "timestamp=" + time + 
+        "&orderId=" + std::to_string(handle.GetId()) +
+        "&recvWindow=50000" + 
+        "&symbol=" + symbol;
+    std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
+    return Response(http::verb::get, "/api/v3/order?" + query + signature);
+}
+
+std::string SpotClient::cancel_order(std::string symbol, OrderHandle handle) {
+    std::string time = std::to_string(std::time(nullptr) * 1000);
+    std::string query = 
+        "timestamp=" + time + 
+        "&orderId=" + std::to_string(handle.GetId()) +
+        "&recvWindow=50000" + 
+        "&symbol=" + symbol;
+    std::string signature = "&signature=" + hmac::get_hmac(secret_key_, query);
+    return Response(http::verb::delete_, "/api/v3/order?" + query + signature);
 }
 
 }

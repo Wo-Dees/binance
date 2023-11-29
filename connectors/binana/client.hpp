@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ssl/context.hpp>
 #include <boost/beast.hpp>
@@ -22,6 +23,7 @@
 #include <openssl/ssl.h>
 #include <openssl/hmac.h>
 #include <boost/beast/ssl.hpp>
+#include <binana/order.hpp>
 
 namespace beast = boost::beast;
 namespace net = boost::asio;
@@ -61,10 +63,13 @@ public:
     std::string account();
     std::string openOrders(std::string symbol);
     std::string allOrders(std::string symbol);
-    std::string create_new_order_test(std::string symbol, SideType side, TypeOrder type, double quantity);
-    std::string create_new_order(std::string symbol, SideType side, TypeOrder type, double quantity); 
-    std::string info_about_order(std::string symbol, std::size_t order_id); 
-    std::string cancel_order(std::string symbol, std::size_t order_id);
+
+    std::string create_new_order_market_test(std::string symbol, SideType side, double quantity);
+    std::string create_new_market_order(std::string symbol, SideType side, double quantity); 
+
+    OrderHandle create_new_limit_order(std::string symbol, SideType side, std::string timeInForce, double price, double quantity);
+    std::string info_about_order(std::string symbol, OrderHandle handle); 
+    std::string cancel_order(std::string symbol, OrderHandle handle);
 
 private:
 

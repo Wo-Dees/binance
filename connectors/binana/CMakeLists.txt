@@ -7,6 +7,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(binana)
 
-target_sources(binana PRIVATE client.cpp order.cpp)
+target_sources(binana PRIVATE client.cpp)
 target_include_directories(binana PUBLIC ../)
 target_link_libraries(binana PRIVATE Threads::Threads OpenSSL::SSL ${Boost_LIBRARIES} hmac)

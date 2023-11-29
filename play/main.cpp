@@ -1,3 +1,4 @@
+#include "binana/order.hpp"
 #include <string>
 
 #include <binana/client.hpp>
@@ -10,8 +11,21 @@ static const std::string secret_key = std::getenv("binance_testnet_secret_key");
 
 int main() {
     binana::SpotClient client(base_url, api_key, secret_key);
-    std::cout << client.create_new_order("BTCUSDT", binana::SideType::Sell, binana::TypeOrder::MARKET, 0.001) << std::endl;
-    std::cout << "======================================" << std::endl;
-    std::cout << client.account() << std::endl;
+    std::cout << "My open orders " << std::endl;
+    std::cout << client.openOrders("BTCUSDT") << std::endl;
+
+    auto handle = client.create_new_limit_order("BTCUSDT", binana::SideType::Sell, "GTC", 50000, 0.3);
+
+    std::cout << "My open orders " << std::endl;
+    std::cout << client.openOrders("BTCUSDT") << std::endl;
+
+    std::cout << "Get info about new order " << std::endl;
+    std::cout << client.info_about_order("BTCUSDT", handle) << std::endl;
+    std::cout << "Cancel new order " << std::endl;
+    std::cout << client.cancel_order("BTCUSDT", handle) << std::endl;
+
+    std::cout << "My open orders " << std::endl;
+    std::cout << client.openOrders("BTCUSDT") << std::endl;
+
     return 0;
 }
